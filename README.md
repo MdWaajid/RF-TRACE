@@ -66,7 +66,8 @@ pip install -r backend/requirements.txt
 
 # 3. Start the FastAPI development server
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
-```
+```8
+
 
 The backend server will start at: **`http://127.0.0.1:8000`**  
 FastAPI Interactive API Documentation (Swagger): **`http://127.0.0.1:8000/docs`**
@@ -143,7 +144,7 @@ All 13 test suites verify:
 | :--- | :--- | :--- |
 | **Dashboard** | System Status & Overview | Live backend connection health, quick metrics, recent analyses. |
 | **Ingestion** | Signal Upload & Import | Drag & drop `.iq` / `.wav` files, format detection (`float32`/`int16`). |
-| **Spectrum** | Power Spectral Density (PSD) | Welch FFT spectrum, 3dB bandwidth estimation, center frequency markers. |
+| **Spectrum** | Power Spectral Density (PSD) | Welch FFT spectrum, 3dB bandwidth estimation, carrier frequency markers. |
 | **Waterfall** | STFT Spectrogram Matrix | 2D time-frequency intensity heatmap with 5th-99.5th percentile dynamic contrast. |
 | **Constellation** | I/Q Scatter Diagram | Real-time I/Q scatter plot overlaid with ideal modulation reference points. |
 | **Modulation** | AI Classifier & Fusion | Softmax class probabilities, CNN residual embeddings, DSP physics evidence. |

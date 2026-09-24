@@ -33,7 +33,7 @@ def extract_signal_parameters(
             "note": "Header metadata / User setting",
         },
         "fc": {
-            "label": "Center Frequency",
+            "label": "Carrier Frequency",
             "value": f"{center_freq / 1e6:.3f}",
             "unit": "MHz",
             "source": "Metadata",

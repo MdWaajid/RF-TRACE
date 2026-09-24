@@ -59,7 +59,7 @@ def fuse_evidence(
         )
 
         # Rule 1: FSK Dual-Tone Frequency Shift (Bimodal Instantaneous Frequency)
-        if bimodal_ratio > 0.82 and env_var < 0.10 and iq_ratio > 0.35:
+        if (bimodal_ratio > 0.65 or raw_probs.get("FSK", 0) > 0.5) and env_var < 0.10:
             detected = "FSK"
             base_confidence = 0.995
             cnn_evidence.append(
@@ -89,7 +89,7 @@ def fuse_evidence(
             }
 
         # Rule 3: Quadrature 2D PSK signal (I & Q power balanced, low envelope variance)
-        elif iq_ratio > 0.70 and env_var < 0.05:
+        elif iq_ratio > 0.70 and env_var < 0.05 and bimodal_ratio <= 0.65:
             detected = "QPSK"
             base_confidence = 0.998
             cnn_evidence.append(

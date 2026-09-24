@@ -6,7 +6,7 @@ export function Spectrum({ a }: { a: Analysis }) {
   const r = a.result;
   return <Page title="Spectrum" sub="Frequency vs power">{!r ? <Empty /> : <>
     <Card title="Power spectrum"><SpectrumChart d={r.spectrum} /></Card>
-    <Card title="Markers"><Row k="Center frequency" v={`${r.spectrum.fcMHz.toFixed(3)} MHz`} /><Row k="Bandwidth edges" v={`${(r.spectrum.fcMHz - r.spectrum.bwMHz / 2).toFixed(3)} – ${(r.spectrum.fcMHz + r.spectrum.bwMHz / 2).toFixed(3)} MHz`} /></Card></>}</Page>;
+    <Card title="Markers"><Row k="Carrier frequency" v={`${r.spectrum.fcMHz.toFixed(3)} MHz`} /><Row k="Bandwidth edges" v={`${(r.spectrum.fcMHz - r.spectrum.bwMHz / 2).toFixed(3)} – ${(r.spectrum.fcMHz + r.spectrum.bwMHz / 2).toFixed(3)} MHz`} /></Card></>}</Page>;
 }
 export function WaterfallPage({ a }: { a: Analysis }) {
   return <Page title="Waterfall" sub="Time-frequency spectrogram">{!a.result ? <Empty /> : <Card title="Spectrogram"><Waterfall d={a.result.waterfall} /></Card>}</Page>;

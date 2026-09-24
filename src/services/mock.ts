@@ -20,7 +20,7 @@ export function mockResult(name = 'sample_capture.iq', size = 8388608): Analysis
     file: { name, sizeBytes: size, format: name.toLowerCase().endsWith('.wav') ? 'WAV' : 'IQ', sampleFormat: 'complex int16', durationS: 1.75 },
     params: {
       fs: { label: 'Sampling frequency', value: '2.400', unit: 'MS/s', source: 'Metadata', note: 'From file header / user input' },
-      fc: { label: 'Center frequency', value: '433.920', unit: 'MHz', source: 'Measured', note: 'Spectral peak centroid' },
+      fc: { label: 'Carrier frequency', value: '433.920', unit: 'MHz', source: 'Measured', note: 'Spectral peak centroid' },
       bw: { label: 'Occupied bandwidth', value: '180.0', unit: 'kHz', source: 'Measured', note: '99% power' },
       symbolRate: { label: 'Symbol rate', value: '75.0', unit: 'kBd', source: 'Estimated', note: 'Cyclostationary estimate' },
       snr: { label: 'SNR', value: '17.8', unit: 'dB', source: 'Estimated' },
