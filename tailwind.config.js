@@ -1,7 +1,15 @@
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: { extend: {
-    colors: { bg: '#0a0d12', panel: '#0f141b', raised: '#151c25', line: '#1f2833', accent: '#3ddbc0', warn: '#e8b04a', bad: '#ef6a6a' },
+    colors: {
+      bg: 'var(--color-bg)',
+      panel: 'var(--color-panel)',
+      raised: 'var(--color-raised)',
+      line: 'var(--color-line)',
+      accent: 'var(--color-accent)',
+      warn: 'var(--color-warn)',
+      bad: 'var(--color-bad)',
+    },
     fontFamily: { sans: ['"IBM Plex Sans"', 'system-ui', 'sans-serif'], mono: ['"IBM Plex Mono"', 'ui-monospace', 'monospace'] },
   } },
   plugins: [],

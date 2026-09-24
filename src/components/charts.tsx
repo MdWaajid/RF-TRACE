@@ -42,8 +42,8 @@ export function Constellation({ d }: { d: AnalysisResult['constellation'] }) {
   const S = 420, R = 1.6, c = S / 2, k = c / R;
   return (
     <svg viewBox={`0 0 ${S} ${S}`} className="w-full max-w-[520px] mx-auto" role="img" aria-label="Constellation diagram">
-      <rect width={S} height={S} fill="#0a0d12" stroke="#1f2833" />
-      {[-1, -0.5, 0.5, 1].map((t) => <g key={t}><line x1={c + t * k} x2={c + t * k} y1={0} y2={S} stroke="#161e28" /><line y1={c - t * k} y2={c - t * k} x1={0} x2={S} stroke="#161e28" /></g>)}
+      <rect width={S} height={S} fill="var(--color-bg)" stroke="var(--color-line)" />
+      {[-1, -0.5, 0.5, 1].map((t) => <g key={t}><line x1={c + t * k} x2={c + t * k} y1={0} y2={S} stroke="var(--color-line)" opacity={0.6} /><line y1={c - t * k} y2={c - t * k} x1={0} x2={S} stroke="var(--color-line)" opacity={0.6} /></g>)}
       <line x1={0} x2={S} y1={c} y2={c} stroke="#334155" /><line x1={c} x2={c} y1={0} y2={S} stroke="#334155" />
       {d.rx.map((p, n) => <circle key={n} cx={c + p.i * k} cy={c - p.q * k} r={1.8} fill="#3ddbc0" opacity={0.55} />)}
       {d.ideal.map((p, n) => <g key={n} stroke="#e8b04a" strokeWidth="1.5"><line x1={c + p.i * k - 6} x2={c + p.i * k + 6} y1={c - p.q * k} y2={c - p.q * k} /><line x1={c + p.i * k} x2={c + p.i * k} y1={c - p.q * k - 6} y2={c - p.q * k + 6} /></g>)}
