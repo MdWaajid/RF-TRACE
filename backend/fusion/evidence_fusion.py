@@ -19,7 +19,7 @@ def fuse_evidence(
     dsp_evidence = cnn_output.get("dspEvidence", [])
     cnn_evidence = cnn_output.get("cnnEvidence", [])
 
-    if len(iq_samples) > 0:
+    if len(iq_samples) > 10:
         max_abs = np.max(np.abs(iq_samples))
         iq_norm = iq_samples / max_abs if max_abs > 1e-12 else iq_samples
 
@@ -29,6 +29,12 @@ def fuse_evidence(
         min_pwr = min(i_pwr, q_pwr)
         iq_ratio = float(min_pwr / (max_pwr + 1e-12))
         env_var = float(np.var(np.abs(iq_norm)))
+
+        # Instantaneous frequency discriminator for FSK detection
+        inst_freq = np.angle(iq_norm[1:] * np.conj(iq_norm[:-1]))
+        h, _ = np.histogram(inst_freq, bins=20)
+        top2_sum = float(np.sum(sorted(h)[-2:]))
+        bimodal_ratio = top2_sum / float(len(inst_freq))
 
         dsp_evidence.append(
             {
@@ -41,12 +47,34 @@ def fuse_evidence(
             {
                 "metric": "Envelope Variance",
                 "value": f"{env_var:.4f}",
-                "note": "Low variance (< 0.02) indicates Phase Shift Keying (BPSK/QPSK)",
+                "note": "Low variance (< 0.02) indicates Constant Envelope (BPSK/QPSK/FSK)",
+            }
+        )
+        dsp_evidence.append(
+            {
+                "metric": "Instantaneous Frequency Bimodal Ratio",
+                "value": f"{bimodal_ratio:.3f}",
+                "note": "Ratio > 0.80 indicates two frequency shift tones (FSK)",
             }
         )
 
-        # Rule 1: Single-channel BPSK signal (Q power = 0)
-        if iq_ratio < 0.05:
+        # Rule 1: FSK Dual-Tone Frequency Shift (Bimodal Instantaneous Frequency)
+        if bimodal_ratio > 0.82 and env_var < 0.10 and iq_ratio > 0.35:
+            detected = "FSK"
+            base_confidence = 0.995
+            cnn_evidence.append(
+                f"Evidence Fusion: DSP measured sharp dual-tone frequency shifts (FSK bimodal ratio = {bimodal_ratio:.3f}), confirming FSK modulation."
+            )
+            raw_probs = {
+                "BPSK": 0.001,
+                "QPSK": 0.001,
+                "8PSK": 0.001,
+                "FSK": 0.995,
+                "16QAM": 0.002,
+            }
+
+        # Rule 2: Single-channel BPSK signal (Q power = 0)
+        elif iq_ratio < 0.05:
             detected = "BPSK"
             base_confidence = 0.996
             cnn_evidence.append(
@@ -60,7 +88,7 @@ def fuse_evidence(
                 "16QAM": 0.001,
             }
 
-        # Rule 2: Quadrature 2D PSK signal (I & Q power balanced, low envelope variance)
+        # Rule 3: Quadrature 2D PSK signal (I & Q power balanced, low envelope variance)
         elif iq_ratio > 0.70 and env_var < 0.05:
             detected = "QPSK"
             base_confidence = 0.998

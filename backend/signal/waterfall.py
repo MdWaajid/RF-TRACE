@@ -38,10 +38,11 @@ def compute_waterfall(
     stft_matrix = np.fft.fftshift(stft_matrix, axes=0)
     power_db = 10.0 * np.log10(np.abs(stft_matrix) ** 2 + 1e-12)
 
-    # Normalize matrix values from 0.0 (quiet) to 1.0 (peak intensity)
-    min_val, max_val = np.min(power_db), np.max(power_db)
-    if max_val > min_val + 1e-6:
-        norm_matrix = (power_db - min_val) / (max_val - min_val)
+    # Normalize matrix values from 0.0 (quiet) to 1.0 (peak intensity) using percentile dynamic range
+    vmin = float(np.percentile(power_db, 5))
+    vmax = float(np.percentile(power_db, 99.5))
+    if vmax > vmin + 1e-6:
+        norm_matrix = np.clip((power_db - vmin) / (vmax - vmin), 0.0, 1.0)
     else:
         norm_matrix = np.zeros_like(power_db)
 

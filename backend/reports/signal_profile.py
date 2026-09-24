@@ -25,8 +25,8 @@ def generate_full_analysis_report(
     sample_rate = sample_rate_override or buffer.sample_rate or 2_000_000.0
     center_freq = center_freq_override or buffer.center_freq or 433_920_000.0
 
-    # 1 & 2. Preprocessing
-    iq_clean = preprocess_signal(buffer.iq_samples, sample_rate, apply_filter=True)
+    # 1 & 2. Preprocessing (DC offset removal & peak normalization without destroying FSK phase derivatives)
+    iq_clean = preprocess_signal(buffer.iq_samples, sample_rate, apply_filter=False)
 
     # 3. DSP Visualizations (Spectrum, Waterfall, Constellation)
     spectrum_res = compute_spectrum(iq_clean, sample_rate, center_freq)

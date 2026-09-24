@@ -3,14 +3,14 @@ import type { AnalysisResult } from '../types';
 
 export function SpectrumChart({ d }: { d: AnalysisResult['spectrum'] }) {
   const W = 800, H = 320, m = { l: 48, r: 12, t: 12, b: 28 };
-  const f0 = d.freqMHz[0], f1 = d.freqMHz[d.freqMHz.length - 1], y0 = -100, y1 = -20;
+  const f0 = d.freqMHz[0], f1 = d.freqMHz[d.freqMHz.length - 1], y0 = -100, y1 = 0;
   const x = (f: number) => m.l + ((f - f0) / (f1 - f0)) * (W - m.l - m.r);
   const y = (p: number) => m.t + ((y1 - p) / (y1 - y0)) * (H - m.t - m.b);
   const path = d.freqMHz.map((f, i) => `${i ? 'L' : 'M'}${x(f).toFixed(1)},${y(d.powerDb[i]).toFixed(1)}`).join('');
   const marks = [[d.fcMHz - d.bwMHz / 2, '#e8b04a', 'BW-'], [d.fcMHz, '#3ddbc0', 'fc'], [d.fcMHz + d.bwMHz / 2, '#e8b04a', 'BW+']] as const;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Power spectrum">
-      {[-100, -80, -60, -40, -20].map((p) => <g key={p}><line x1={m.l} x2={W - m.r} y1={y(p)} y2={y(p)} stroke="#1f2833" /><text x={m.l - 6} y={y(p) + 4} textAnchor="end" fontSize="10" fill="#64748b">{p}</text></g>)}
+      {[-100, -80, -60, -40, -20, 0].map((p) => <g key={p}><line x1={m.l} x2={W - m.r} y1={y(p)} y2={y(p)} stroke="#1f2833" /><text x={m.l - 6} y={y(p) + 4} textAnchor="end" fontSize="10" fill="#64748b">{p}</text></g>)}
       {[0, 0.25, 0.5, 0.75, 1].map((t) => { const f = f0 + t * (f1 - f0); return <text key={t} x={x(f)} y={H - 10} textAnchor="middle" fontSize="10" fill="#64748b">{f.toFixed(2)}</text>; })}
       <path d={path} fill="none" stroke="#7dd3fc" strokeWidth="1.2" />
       {marks.map(([f, c, l]) => <g key={l}><line x1={x(f)} x2={x(f)} y1={m.t} y2={H - m.b} stroke={c} strokeDasharray="4 3" /><text x={x(f) + 4} y={m.t + 10} fontSize="10" fill={c}>{l}</text></g>)}

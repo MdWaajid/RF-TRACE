@@ -3,7 +3,7 @@ import uuid
 from typing import Dict, Optional
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Body
 from pydantic import BaseModel
-from backend.api.upload import uploaded_buffers
+from backend.api import upload
 from backend.reports.signal_profile import generate_full_analysis_report
 
 router = APIRouter(prefix="/api", tags=["Analysis"])
@@ -51,8 +51,9 @@ def run_analysis_pipeline(
 async def start_analysis(
     req: AnalysisRequest, background_tasks: BackgroundTasks
 ):
-    """Starts asynchronous signal intelligence analysis."""
-    if req.fileId not in uploaded_buffers:
+    """Starts signal intelligence analysis pipeline."""
+    print(f"DEBUG: req.fileId={req.fileId}, uploaded_buffers keys={list(upload.uploaded_buffers.keys())}")
+    if req.fileId not in upload.uploaded_buffers:
         # Fallback to demo synthetic buffer if no upload file matches
         from backend.signal.loader import SignalBuffer
         import numpy as np
@@ -73,25 +74,24 @@ async def start_analysis(
             num_samples=20000,
         )
     else:
-        buffer = uploaded_buffers[req.fileId]
+        buffer = upload.uploaded_buffers[req.fileId]
 
     analysis_id = f"job-{uuid.uuid4().hex[:8]}"
     analysis_jobs[analysis_id] = {
         "analysisId": analysis_id,
-        "state": "queued",
-        "stage": 0,
-        "stageName": "Queued",
-        "progressPct": 0.0,
+        "state": "running",
+        "stage": 1,
+        "stageName": "File Ingestion & Preprocessing",
+        "progressPct": 20.0,
         "error": None,
         "results": None,
     }
 
-    background_tasks.add_task(
-        run_analysis_pipeline,
+    run_analysis_pipeline(
         analysis_id,
         buffer,
         req.sampleRate,
         req.centerFreq,
     )
 
-    return {"analysisId": analysis_id, "status": "queued"}
+    return {"analysisId": analysis_id, "status": "complete"}

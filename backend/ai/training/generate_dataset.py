@@ -33,10 +33,12 @@ def generate_single_iq_frame(
     freq_offset_hz: float = 0.0,
     phase_offset_rad: float = 0.0,
     sps: int = 4,
+    rrc_alpha: float = 0.35,
+    phase_noise_std: float = 0.02,
 ) -> np.ndarray:
     """Generates synthetic complex I/Q frame with realistic pulse shaping and impairments."""
     mod = mod_name.upper()
-    num_symbols = (seq_len // sps) + 16
+    num_symbols = (seq_len // sps) + 32
 
     if mod == "BPSK":
         bits = np.random.randint(0, 2, num_symbols)
@@ -51,7 +53,8 @@ def generate_single_iq_frame(
         symbols = np.exp(1j * 2 * np.pi * sym_idx / 8)
     elif mod in ["FSK", "2FSK"]:
         bits = np.random.randint(0, 2, num_symbols)
-        freqs = (2 * bits - 1) * (0.05 / sps)
+        freq_dev = float(np.random.uniform(0.02, 0.08)) / sps
+        freqs = (2 * bits - 1) * freq_dev
         phase = np.cumsum(np.repeat(freqs, sps))[:seq_len]
         symbols_upsampled = np.exp(1j * 2 * np.pi * phase)
     elif mod == "16QAM":
@@ -69,18 +72,27 @@ def generate_single_iq_frame(
         # Upsample symbols by SPS
         upsampled = np.zeros(num_symbols * sps, dtype=complex)
         upsampled[::sps] = symbols
-        # Apply RRC pulse shaping filter
-        pulse_filter = rrc_filter(sps=sps)
+        # Apply RRC pulse shaping filter with dynamic alpha
+        pulse_filter = rrc_filter(sps=sps, alpha=rrc_alpha)
         filtered_i = np.convolve(np.real(upsampled), pulse_filter, mode="same")
         filtered_q = np.convolve(np.imag(upsampled), pulse_filter, mode="same")
         iq_wave = (filtered_i + 1j * filtered_q)[:seq_len]
     else:
         iq_wave = symbols_upsampled[:seq_len]
 
-    # Apply frequency offset and phase shift
+    # Apply carrier frequency offset, initial phase shift, and random phase noise jitter
     t = np.arange(seq_len)
-    phase_rotation = np.exp(1j * (2 * np.pi * freq_offset_hz * t + phase_offset_rad))
+    random_phase_jitter = np.random.normal(0, phase_noise_std, seq_len)
+    phase_rotation = np.exp(1j * (2 * np.pi * freq_offset_hz * t + phase_offset_rad + random_phase_jitter))
     impaired_iq = iq_wave * phase_rotation
+
+    # Add small DC offset and gain imbalance
+    dc_i = np.random.normal(0, 0.01)
+    dc_q = np.random.normal(0, 0.01)
+    gain_i = np.random.uniform(0.95, 1.05)
+    gain_q = np.random.uniform(0.95, 1.05)
+
+    impaired_iq = (gain_i * np.real(impaired_iq) + dc_i) + 1j * (gain_q * np.imag(impaired_iq) + dc_q)
 
     # Add AWGN noise
     snr_linear = 10.0 ** (snr_db / 10.0)
@@ -99,7 +111,7 @@ def generate_single_iq_frame(
 
 
 def generate_synthetic_dataset(
-    num_samples_per_class: int = 400, seq_len: int = 1024
+    num_samples_per_class: int = 600, seq_len: int = 1024
 ) -> t.Tuple[np.ndarray, np.ndarray]:
     """Generates realistic oversampled synthetic dataset (X, y) for training PyTorch model."""
     X_list = []
@@ -107,10 +119,12 @@ def generate_synthetic_dataset(
 
     for class_idx, mod_name in enumerate(MODULATION_CLASSES):
         for _ in range(num_samples_per_class):
-            snr = float(np.random.uniform(2.0, 25.0))
-            freq_offset = float(np.random.uniform(-0.005, 0.005))
+            snr = float(np.random.uniform(-5.0, 30.0))
+            freq_offset = float(np.random.uniform(-0.03, 0.03))
             phase_offset = float(np.random.uniform(0, 2 * np.pi))
-            sps = int(np.random.choice([2, 4, 8]))
+            sps = int(np.random.choice([2, 4, 8, 16]))
+            rrc_alpha = float(np.random.uniform(0.2, 0.5))
+            phase_noise_std = float(np.random.uniform(0.005, 0.04))
 
             iq_frame = generate_single_iq_frame(
                 mod_name,
@@ -119,6 +133,8 @@ def generate_synthetic_dataset(
                 freq_offset_hz=freq_offset,
                 phase_offset_rad=phase_offset,
                 sps=sps,
+                rrc_alpha=rrc_alpha,
+                phase_noise_std=phase_noise_std,
             )
 
             iq_tensor_data = np.stack([np.real(iq_frame), np.imag(iq_frame)], axis=0)
@@ -131,3 +147,4 @@ def generate_synthetic_dataset(
     indices = np.arange(len(y))
     np.random.shuffle(indices)
     return X[indices], y[indices]
+

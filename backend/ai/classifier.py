@@ -37,36 +37,46 @@ class ModulationClassifier:
                 "dspEvidence": [],
             }
 
-        # Prepare 1024-sample frame
+        # Extract up to 8 windows across the IQ file for robust sliding-window prediction
+        frames = []
         if len(iq_samples) >= frame_len:
-            start_idx = (len(iq_samples) - frame_len) // 2
-            frame = iq_samples[start_idx : start_idx + frame_len]
-        else:
+            max_windows = 8
+            step = max(1, (len(iq_samples) - frame_len) // (max_windows - 1)) if max_windows > 1 else 1
+            for start_idx in range(0, len(iq_samples) - frame_len + 1, step):
+                window = iq_samples[start_idx : start_idx + frame_len]
+                max_val = np.max(np.abs(window))
+                if max_val > 1e-6:
+                    window = window / max_val
+                frames.append(window)
+                if len(frames) >= max_windows:
+                    break
+        
+        if not frames:
             # Pad with zeros if shorter than 1024
-            frame = np.pad(iq_samples, (0, frame_len - len(iq_samples)))
+            window = np.pad(iq_samples, (0, frame_len - len(iq_samples)))
+            max_val = np.max(np.abs(window))
+            if max_val > 1e-6:
+                window = window / max_val
+            frames = [window]
 
-        # Normalize
-        max_val = np.max(np.abs(frame))
-        if max_val > 1e-6:
-            frame = frame / max_val
-
-        # Convert to Tensor shape (1, 2, 1024)
-        tensor_data = (
-            np.stack([np.real(frame), np.imag(frame)], axis=0)
-            .astype(np.float32)[np.newaxis, ...]
-        )
-        x_tensor = torch.tensor(tensor_data).to(self.device)
+        # Convert to Tensor batch shape (N, 2, 1024)
+        batch_data = np.stack(
+            [np.stack([np.real(f), np.imag(f)], axis=0) for f in frames],
+            axis=0,
+        ).astype(np.float32)
+        x_tensor = torch.tensor(batch_data).to(self.device)
 
         if self.is_loaded:
             self.model.eval()
             with torch.no_grad():
                 logits = self.model(x_tensor)
-                probs_tensor = F.softmax(logits, dim=1)[0]
-                probs_np = probs_tensor.cpu().numpy()
+                probs_batch = F.softmax(logits, dim=1).cpu().numpy()
+                probs_np = np.mean(probs_batch, axis=0)
         else:
             # Fallback heuristic if model file hasn't been generated yet
             probs_np = np.array([0.05, 0.82, 0.08, 0.02, 0.03], dtype=np.float32)
 
+        frame = frames[len(frames) // 2]
         # Map to dict
         probs_dict = {
             cls: float(probs_np[i]) for i, cls in enumerate(MODULATION_CLASSES)
@@ -77,8 +87,8 @@ class ModulationClassifier:
 
         # Generate evidence logs
         cnn_evidence = [
-            f"PyTorch CNN softmax confidence: {confidence * 100:.1f}% for {detected_mod}",
-            f"Input frame shape: (2, {frame_len}) complex samples",
+            f"PyTorch CNN averaged softmax confidence ({len(frames)} frames): {confidence * 100:.1f}% for {detected_mod}",
+            f"Evaluated input windows: {len(frames)} x (2, {frame_len}) complex frames",
             f"ResNet feature extraction: 128-channel residual pooled embedding",
         ]
 
