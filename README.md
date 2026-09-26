@@ -55,18 +55,18 @@ Before running RF-TRACE, ensure you have installed:
 
 ### Step 1: Start the FastAPI Backend Server
 
-Open a terminal and navigate to **`RF-TRACE-main`** (do **NOT** `cd` into the `backend` folder directly, as the local `backend/signal/` directory will shadow Python's built-in `signal` library):
+Open a terminal in your cloned `RF-TRACE` repository root folder (do **NOT** `cd` into the `backend` folder directly, as the local `backend/signal/` directory will shadow Python's built-in `signal` library):
 
 ```bash
-# 1. Navigate to the project root directory
-cd C:\Users\waaji\Desktop\RF-TRACE\RF-TRACE-main
+# 1. Navigate to your repository root directory
+cd RF-TRACE
 
 # 2. Install backend dependencies
 pip install -r backend/requirements.txt
 
 # 3. Start the FastAPI development server
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000 --reload
-```8
+```
 
 
 The backend server will start at: **`http://127.0.0.1:8000`**  
