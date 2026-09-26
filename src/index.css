@@ -2,7 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* PROFESSIONAL LIGHT THEME */
+/* =========================================
+   PRO DESIGN SYSTEM - DUAL THEME PALETTES
+   ========================================= */
+
+/* LIGHT MODE (DEFENSE / AEROSPACE SIGNAL WORKSTATION) */
 :root,
 html.light {
   --color-bg: #f8fafc;
@@ -10,6 +14,7 @@ html.light {
   --color-raised: #f1f5f9;
   --color-line: #e2e8f0;
   --color-accent: #0284c7;
+  --color-accent-hover: #0369a1;
   --color-warn: #d97706;
   --color-bad: #e11d48;
   --color-text-main: #0f172a;
@@ -18,25 +23,33 @@ html.light {
   --color-title: #020617;
 }
 
-/* SLEEK TACTICAL DARK THEME */
+/* DARK MODE (CYBERPUNK / HIGH-TECH SIGINT LABORATORY) */
 html.dark {
-  --color-bg: #0a0d12;
-  --color-panel: #0f141b;
-  --color-raised: #151c25;
-  --color-line: #1f2833;
-  --color-accent: #3ddbc0;
-  --color-warn: #e8b04a;
-  --color-bad: #ef6a6a;
-  --color-text-main: #f8fafc;
+  --color-bg: #090d14;
+  --color-panel: #111827;
+  --color-raised: #1f2937;
+  --color-line: #374151;
+  --color-accent: #06b6d4;
+  --color-accent-hover: #22d3ee;
+  --color-warn: #f59e0b;
+  --color-bad: #f43f5e;
+  --color-text-main: #f9fafb;
   --color-text-sub: #cbd5e1;
   --color-text-muted: #94a3b8;
-  --color-title: #f1f5f9;
+  --color-title: #ffffff;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text-main);
-  @apply font-sans antialiased transition-colors duration-200;
+  @apply font-sans antialiased transition-colors duration-200 selection:bg-sky-500/20 selection:text-sky-900 dark:selection:text-sky-200;
+}
+
+/* Input placeholder support */
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.8;
 }
 
 :focus-visible {
@@ -44,9 +57,18 @@ body {
   outline-offset: 2px;
 }
 
-/* PLACEHOLDER TEXT */
-input::placeholder,
-textarea::placeholder {
-  color: var(--color-text-muted);
-  opacity: 0.7;
+/* Custom scrollbar styling for technical feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
 }

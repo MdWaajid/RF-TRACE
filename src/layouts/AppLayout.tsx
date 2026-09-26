@@ -31,14 +31,14 @@ export function AppLayout({ page, setPage, a, children }: { page: PageId; setPag
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       <aside className="md:w-56 md:min-h-screen shrink-0 bg-panel border-b md:border-b-0 md:border-r border-line flex md:flex-col overflow-x-auto">
-        <div className="flex items-center gap-2 px-4 py-3.5 md:py-4 shrink-0">
-          <svg width="24" height="24" viewBox="0 0 22 22" fill="none" stroke="var(--color-accent)" strokeWidth="2"><path d="M1 11h4l2-7 4 14 3-10 2 3h5" /></svg>
-          <span className="font-mono font-black text-base tracking-wider text-slate-900 dark:text-slate-100">RF-TRACE</span>
+        <div className="flex items-center gap-2 px-4 py-3 md:py-4 shrink-0">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--color-accent)" strokeWidth="1.8"><path d="M1 11h4l2-7 4 14 3-10 2 3h5" /></svg>
+          <span className="font-mono font-bold tracking-wider text-slate-900 dark:text-slate-100 text-base">RF-TRACE</span>
         </div>
         <nav className="flex md:flex-col md:px-2 md:pb-4 gap-1" aria-label="Main">
           {NAV.map((n) => (
             <button key={n} onClick={() => setPage(n)} aria-current={page === n}
-              className={`text-left whitespace-nowrap text-sm px-3.5 py-2.5 rounded-md border-l-2 font-semibold transition-all duration-150 ${page === n ? 'bg-raised text-accent border-accent shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-raised/60'}`}>{n}</button>
+              className={`text-left whitespace-nowrap text-sm px-3.5 py-2 rounded-md border-l-2 font-semibold transition-all duration-150 ${page === n ? 'bg-raised text-accent border-accent shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-raised/60'}`}>{n}</button>
           ))}
         </nav>
       </aside>
