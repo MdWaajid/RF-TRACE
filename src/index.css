@@ -2,9 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* =========================================
-   PRO DESIGN SYSTEM - DUAL THEME PALETTES
-   ========================================= */
+/* =========================================================
+   PRO DESIGN SYSTEM - AEROSPACE & SIGINT DUAL THEME PALETTES
+   ========================================================= */
 
 /* LIGHT MODE (DEFENSE / AEROSPACE SIGNAL WORKSTATION) */
 :root,
@@ -12,28 +12,28 @@ html.light {
   --color-bg: #f8fafc;
   --color-panel: #ffffff;
   --color-raised: #f1f5f9;
-  --color-line: #e2e8f0;
+  --color-line: #cbd5e1;
   --color-accent: #0284c7;
   --color-accent-hover: #0369a1;
   --color-warn: #d97706;
   --color-bad: #e11d48;
-  --color-text-main: #0f172a;
-  --color-text-sub: #334155;
-  --color-text-muted: #64748b;
+  --color-text-main: #020617;
+  --color-text-sub: #1e293b;
+  --color-text-muted: #475569;
   --color-title: #020617;
 }
 
-/* DARK MODE (CYBERPUNK / HIGH-TECH SIGINT LABORATORY) */
+/* DARK MODE (HIGH-TECH CYBERPUNK / SIGINT LABORATORY) */
 html.dark {
-  --color-bg: #090d14;
-  --color-panel: #111827;
-  --color-raised: #1f2937;
-  --color-line: #374151;
+  --color-bg: #06090f;
+  --color-panel: #0d131f;
+  --color-raised: #162032;
+  --color-line: #26334d;
   --color-accent: #06b6d4;
   --color-accent-hover: #22d3ee;
   --color-warn: #f59e0b;
   --color-bad: #f43f5e;
-  --color-text-main: #f9fafb;
+  --color-text-main: #f8fafc;
   --color-text-sub: #cbd5e1;
   --color-text-muted: #94a3b8;
   --color-title: #ffffff;
@@ -42,14 +42,14 @@ html.dark {
 body {
   background-color: var(--color-bg);
   color: var(--color-text-main);
-  @apply font-sans antialiased transition-colors duration-200 selection:bg-sky-500/20 selection:text-sky-900 dark:selection:text-sky-200;
+  @apply font-sans antialiased transition-colors duration-200 selection:bg-sky-500/25 selection:text-sky-950 dark:selection:text-sky-100;
 }
 
 /* Input placeholder support */
 input::placeholder,
 textarea::placeholder {
   color: var(--color-text-muted);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 :focus-visible {
