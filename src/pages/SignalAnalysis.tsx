@@ -8,8 +8,8 @@ export default function SignalAnalysis({ a }: { a: Analysis }) {
       <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
         {Object.values(a.result.params).map((p) => (
           <Card key={p.label} title={p.label} right={<SourceBadge s={p.source} />}>
-            <div className="font-mono text-2xl">{p.value ?? 'Unknown'}<span className="text-sm text-slate-500 ml-1.5">{p.unit}</span></div>
-            {p.note && <p className="text-xs text-slate-500 mt-1">{p.note}</p>}
+            <div className="font-mono text-2xl text-main">{p.value ?? 'Unknown'}<span className="text-sm text-sub ml-1.5">{p.unit}</span></div>
+            {p.note && <p className="text-xs text-muted mt-1">{p.note}</p>}
           </Card>
         ))}
       </div>

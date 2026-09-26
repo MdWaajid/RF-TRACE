@@ -13,5 +13,5 @@ export function WaterfallPage({ a }: { a: Analysis }) {
 }
 export function ConstellationPage({ a }: { a: Analysis }) {
   return <Page title="Constellation" sub="I/Q scatter with ideal reference points">{!a.result ? <Empty /> :
-    <Card title="I/Q plot" right={<span className="text-xs text-slate-500"><span className="text-accent">●</span> received <span className="text-warn ml-2">+</span> ideal</span>}><Constellation d={a.result.constellation} /></Card>}</Page>;
+    <Card title="I/Q plot" right={<span className="text-xs text-sub"><span className="text-accent">●</span> received <span className="text-warn ml-2">+</span> ideal</span>}><Constellation d={a.result.constellation} /></Card>}</Page>;
 }
