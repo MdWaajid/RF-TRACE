@@ -33,20 +33,20 @@ export function AppLayout({ page, setPage, a, children }: { page: PageId; setPag
       <aside className="md:w-56 md:min-h-screen shrink-0 bg-panel border-b md:border-b-0 md:border-r border-line flex md:flex-col overflow-x-auto">
         <div className="flex items-center gap-2 px-4 py-3 md:py-4 shrink-0">
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--color-accent)" strokeWidth="1.6"><path d="M1 11h4l2-7 4 14 3-10 2 3h5" /></svg>
-          <span className="font-mono font-medium tracking-wide">RF-TRACE</span>
+          <span className="font-mono font-extrabold tracking-wide text-black dark:text-slate-100">RF-TRACE</span>
         </div>
         <nav className="flex md:flex-col md:px-2 md:pb-4 gap-0.5" aria-label="Main">
           {NAV.map((n) => (
             <button key={n} onClick={() => setPage(n)} aria-current={page === n}
-              className={`text-left whitespace-nowrap text-sm px-3 py-2 rounded-sm border-l-2 ${page === n ? 'bg-raised text-accent border-accent' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-raised/60'}`}>{n}</button>
+              className={`text-left whitespace-nowrap text-sm px-3 py-2 rounded-sm border-l-2 font-bold ${page === n ? 'bg-raised text-accent border-accent shadow-xs' : 'text-black dark:text-slate-400 hover:text-black dark:hover:text-slate-200 hover:bg-raised/60'}`}>{n}</button>
           ))}
         </nav>
       </aside>
       <div className="flex-1 min-w-0 flex flex-col">
         <header className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2 bg-panel border-b border-line text-sm">
-          <div className="min-w-0"><span className="text-slate-500">File </span><span className="font-mono truncate">{fileName}</span></div>
-          <div className="flex items-center gap-2"><span className={`w-2 h-2 rounded-full ${dot[a.state]}`} /><span className="capitalize">{a.state}</span></div>
-          <div className="flex items-center gap-2 text-slate-500"><span className={`w-2 h-2 rounded-full ${be[a.backend][0]}`} />{be[a.backend][1]}</div>
+          <div className="min-w-0"><span className="text-neutral-900 dark:text-slate-400 font-bold">File </span><span className="font-mono font-extrabold text-black dark:text-slate-100 truncate">{fileName}</span></div>
+          <div className="flex items-center gap-2 font-bold text-black dark:text-slate-100"><span className={`w-2 h-2 rounded-full ${dot[a.state]}`} /><span className="capitalize">{a.state}</span></div>
+          <div className="flex items-center gap-2 text-neutral-900 dark:text-slate-400 font-bold"><span className={`w-2 h-2 rounded-full ${be[a.backend][0]}`} />{be[a.backend][1]}</div>
           <div className="ml-auto flex gap-2">
             <Btn onClick={toggleTheme}>{theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}</Btn>
             <Btn onClick={a.reset}>New Analysis</Btn>
