@@ -15,10 +15,13 @@ export function AppLayout({ page, setPage, a, children }: { page: PageId; setPag
   );
 
   useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.classList.add('light');
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
     } else {
-      document.documentElement.classList.remove('light');
+      root.classList.add('light');
+      root.classList.remove('dark');
     }
     localStorage.setItem('rf_theme', theme);
   }, [theme]);
