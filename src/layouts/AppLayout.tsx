@@ -5,13 +5,24 @@ import { Btn } from '../components/ui';
 export const NAV = ['Dashboard', 'Signal Analysis', 'Spectrum', 'Waterfall', 'Constellation', 'Modulation', 'Bit Stream', 'FEC / Interleaving', 'Signal Profile', 'Settings'] as const;
 export type PageId = (typeof NAV)[number];
 
-const dot = { idle: 'bg-slate-500', running: 'bg-warn animate-pulse', complete: 'bg-accent', error: 'bg-bad' } as const;
-const be = { mock: ['bg-warn', 'Mock data (no backend)'], checking: ['bg-slate-500', 'Checking backend…'], online: ['bg-accent', 'Backend online'], offline: ['bg-bad', 'Backend offline'] } as const;
+const dot = {
+  idle: 'bg-slate-400',
+  running: 'bg-accent animate-ping',
+  complete: 'bg-emerald-500 shadow-[0_0_8px_#10b981]',
+  error: 'bg-bad shadow-[0_0_8px_#f43f5e]',
+} as const;
+
+const be = {
+  mock: ['bg-amber-500 shadow-[0_0_8px_#f59e0b]', 'Mock Mode (Local)'],
+  checking: ['bg-slate-400 animate-pulse', 'Checking Backend…'],
+  online: ['bg-emerald-500 shadow-[0_0_8px_#10b981]', 'Backend Online'],
+  offline: ['bg-bad shadow-[0_0_8px_#f43f5e]', 'Backend Offline'],
+} as const;
 
 export function AppLayout({ page, setPage, a, children }: { page: PageId; setPage: (p: PageId) => void; a: Analysis; children: ReactNode }) {
-  const fileName = a.file?.name ?? a.result?.file.name ?? 'No file loaded';
+  const fileName = a.file?.name ?? a.result?.file.name ?? 'No capture loaded';
   const [theme, setTheme] = useState<'light' | 'dark'>(
-    () => (localStorage.getItem('rf_theme') as 'light' | 'dark') || 'light'
+    () => (localStorage.getItem('rf_theme') as 'light' | 'dark') || 'dark'
   );
 
   useEffect(() => {
@@ -29,32 +40,79 @@ export function AppLayout({ page, setPage, a, children }: { page: PageId; setPag
   const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
-      <aside className="md:w-56 md:min-h-screen shrink-0 bg-panel border-b md:border-b-0 md:border-r border-line flex md:flex-col overflow-x-auto">
-        <div className="flex items-center gap-2 px-4 py-3 md:py-4 shrink-0">
-          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="var(--color-accent)" strokeWidth="1.8"><path d="M1 11h4l2-7 4 14 3-10 2 3h5" /></svg>
-          <span className="font-mono font-bold tracking-wider text-main text-base">RF-TRACE</span>
+    <div className="min-h-screen flex flex-col md:flex-row bg-bg">
+      <aside className="md:w-60 md:min-h-screen shrink-0 bg-panel border-b md:border-b-0 md:border-r border-line flex md:flex-col overflow-x-auto">
+        <div className="flex items-center gap-3 px-4 py-4 shrink-0 border-b border-line/60">
+          <div className="w-8 h-8 rounded-md bg-accent/15 border border-accent/40 flex items-center justify-center shadow-xs">
+            <svg width="18" height="18" viewBox="0 0 22 22" fill="none" stroke="var(--color-accent)" strokeWidth="2.2">
+              <path d="M1 11h4l2-7 4 14 3-10 2 3h5" />
+            </svg>
+          </div>
+          <div>
+            <div className="font-mono font-black tracking-widest text-main text-base leading-none">RF-TRACE</div>
+            <div className="text-[10px] font-mono tracking-wider text-muted uppercase mt-0.5">SIGINT Workstation v0.1</div>
+          </div>
         </div>
-        <nav className="flex md:flex-col md:px-2 md:pb-4 gap-1" aria-label="Main">
-          {NAV.map((n) => (
-            <button key={n} onClick={() => setPage(n)} aria-current={page === n}
-              className={`text-left whitespace-nowrap text-sm px-3.5 py-2 rounded-md border-l-2 font-semibold transition-all duration-150 ${page === n ? 'bg-raised text-accent border-accent shadow-xs' : 'text-sub hover:text-main hover:bg-raised/60'}`}>{n}</button>
-          ))}
+
+        <nav className="flex md:flex-col md:p-2 gap-1 overflow-y-auto" aria-label="Main Navigation">
+          {NAV.map((n) => {
+            const active = page === n;
+            return (
+              <button
+                key={n}
+                onClick={() => setPage(n)}
+                aria-current={active}
+                className={`text-left whitespace-nowrap text-xs uppercase font-mono tracking-wider px-3.5 py-2.5 rounded-sm border-l-2 font-bold transition-all duration-150 ${
+                  active
+                    ? 'bg-raised text-accent border-accent shadow-2xs font-black'
+                    : 'text-sub border-transparent hover:text-main hover:bg-raised/50 hover:border-line'
+                }`}
+              >
+                {n}
+              </button>
+            );
+          })}
         </nav>
       </aside>
+
       <div className="flex-1 min-w-0 flex flex-col">
-        <header className="flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-2.5 bg-panel border-b border-line text-sm shadow-2xs">
-          <div className="min-w-0"><span className="text-muted font-medium">File </span><span className="font-mono font-bold text-main truncate">{fileName}</span></div>
-          <div className="flex items-center gap-2 font-semibold text-main"><span className={`w-2.5 h-2.5 rounded-full ${dot[a.state]}`} /><span className="capitalize">{a.state}</span></div>
-          <div className="flex items-center gap-2 text-sub font-semibold"><span className={`w-2.5 h-2.5 rounded-full ${be[a.backend][0]}`} />{be[a.backend][1]}</div>
-          <div className="ml-auto flex gap-2">
+        <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-5 py-3 bg-panel border-b border-line text-xs shadow-xs">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-muted uppercase font-mono text-[10px] tracking-wider">Capture:</span>
+              <span className="font-mono font-bold text-main max-w-xs truncate bg-raised px-2 py-0.5 rounded-xs border border-line/50">{fileName}</span>
+            </div>
+
+            <div className="flex items-center gap-2 font-mono font-semibold text-main bg-raised/40 px-2.5 py-1 rounded-xs border border-line/40">
+              <span className="relative flex h-2 w-2">
+                {a.state === 'running' && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${dot[a.state]}`} />
+              </span>
+              <span className="capitalize">{a.state}</span>
+            </div>
+
+            <div className="flex items-center gap-2 text-sub font-mono font-semibold bg-raised/40 px-2.5 py-1 rounded-xs border border-line/40">
+              <span className={`w-2 h-2 rounded-full ${be[a.backend][0]}`} />
+              {be[a.backend][1]}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Btn onClick={toggleTheme}>{theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}</Btn>
-            <Btn onClick={a.reset}>New Analysis</Btn>
-            <Btn primary onClick={a.run} disabled={!a.file || a.state === 'running'}>Run Analysis</Btn>
+            <Btn onClick={a.reset}>Reset</Btn>
+            <Btn primary onClick={a.run} disabled={!a.file || a.state === 'running'}>
+              Run Analysis
+            </Btn>
           </div>
         </header>
-        {a.isPreview && <div className="px-4 py-1 text-xs bg-warn/10 text-warn border-b border-warn/30">Preview mode: all values are synthetic mock data for UI layout, not analysis output. Set VITE_USE_MOCK=false to use the backend.</div>}
-        <main className="p-4 flex-1">{children}</main>
+
+        {a.isPreview && (
+          <div className="px-5 py-1.5 text-xs bg-warn/10 text-warn border-b border-warn/30 font-mono flex items-center justify-between">
+            <span>[PREVIEW MODE] Synthetic data mode active. Connect backend (`VITE_USE_MOCK=false`) for live hardware IQ capture.</span>
+          </div>
+        )}
+
+        <main className="p-5 flex-1 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );
