@@ -52,20 +52,32 @@ export const api = {
     if (!startRes.ok) throw new Error(`Failed to start analysis (${startRes.status})`);
     const { analysisId } = await startRes.json();
 
-    // Step 3: Poll status until completion
+    // Step 3: Poll status until completion (max 150 iterations = 90s for cloud backend cold starts)
     let pollCount = 0;
-    while (pollCount < 40) {
+    let isComplete = false;
+    while (pollCount < 150) {
       pollCount++;
-      const statusResp = await fetch(`${API_BASE}/api/analysis/${analysisId}/status`);
-      if (statusResp.ok) {
-        const s = await statusResp.json();
-        const stageIdx = Math.min(Math.floor((s.stage / 12) * (STAGES.length - 1)), STAGES.length - 2);
-        onStage(stageIdx);
+      try {
+        const statusResp = await fetch(`${API_BASE}/api/analysis/${analysisId}/status`);
+        if (statusResp.ok) {
+          const s = await statusResp.json();
+          const stageIdx = Math.min(Math.floor((s.stage / 12) * (STAGES.length - 1)), STAGES.length - 2);
+          onStage(stageIdx);
 
-        if (s.state === 'complete') break;
-        if (s.state === 'error') throw new Error(s.error ?? 'Analysis failed');
+          if (s.state === 'complete') {
+            isComplete = true;
+            break;
+          }
+          if (s.state === 'error') throw new Error(s.error ?? 'Analysis failed on backend server');
+        }
+      } catch (err) {
+        if (err instanceof Error && err.message.includes('Analysis failed')) throw err;
       }
       await sleep(600);
+    }
+
+    if (!isComplete) {
+      throw new Error('Analysis request timed out while waiting for backend server response.');
     }
 
     // Step 4: Fetch Results

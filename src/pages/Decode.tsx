@@ -5,18 +5,76 @@ import { Btn, Card, Empty, Page, Row } from '../components/ui';
 export function Modulation({ a }: { a: Analysis }) {
   const m = a.result?.modulation;
   if (!m) return <Page title="Modulation"><Empty /></Page>;
+  const confPct = Math.min(100, Math.max(0, m.confidence > 1 ? m.confidence : m.confidence * 100));
+
   return (
     <Page title="Modulation" sub="Classifier output and supporting evidence">
       <div className="grid lg:grid-cols-3 gap-3">
         <Card title="Classification probabilities" className="lg:col-span-2">
-          <div className="space-y-2">{(Object.entries(m.probs) as [string, number][]).sort((x, y) => y[1] - x[1]).map(([k, v]) => (
-            <div key={k} className="flex items-center gap-3 text-sm"><span className="w-14 font-mono font-semibold text-main">{k}</span>
-              <div className="flex-1 h-3 bg-raised border border-line rounded-xs"><div className={`h-full ${k === m.detected ? 'bg-accent' : 'bg-muted/40'}`} style={{ width: `${v * 100}%` }} /></div>
-              <span className="w-12 text-right font-mono font-semibold text-main">{(v * 100).toFixed(1)}%</span></div>))}</div>
+          <div className="space-y-3">
+            {(Object.entries(m.probs) as [string, number][])
+              .sort((x, y) => y[1] - x[1])
+              .map(([k, rawV]) => {
+                const pct = Math.min(100, Math.max(0, rawV > 1 ? rawV : rawV * 100));
+                const isDetected = k === m.detected;
+                return (
+                  <div key={k} className="space-y-1">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className={`font-mono font-bold ${isDetected ? 'text-accent' : 'text-main'}`}>
+                        {k}
+                        {isDetected && (
+                          <span className="text-[10px] bg-accent/20 text-accent border border-accent/30 rounded-xs px-1.5 py-0.5 ml-2 uppercase tracking-wider font-semibold">
+                            Detected
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-mono font-semibold text-main">{pct.toFixed(1)}%</span>
+                    </div>
+                    <div className="h-3 bg-raised border border-line rounded-xs overflow-hidden p-0.5">
+                      <div
+                        className={`h-full transition-all duration-500 rounded-xs ${
+                          isDetected
+                            ? 'bg-accent glow-accent'
+                            : pct > 20
+                            ? 'bg-sky-600/80 dark:bg-sky-500/80'
+                            : 'bg-slate-400/80 dark:bg-slate-500/80'
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
         </Card>
-        <Card title="Result"><div className="font-mono text-3xl font-bold text-accent">{m.detected}</div><Row k="Confidence" v={`${(m.confidence * 100).toFixed(1)}%`} /></Card>
-        <Card title="CNN evidence"><ul className="text-sm space-y-1.5 list-disc pl-4 text-sub font-medium">{m.cnnEvidence.map((e) => <li key={e}>{e}</li>)}</ul></Card>
-        <Card title="DSP evidence" className="lg:col-span-2">{m.dspEvidence.map((e) => <Row key={e.metric} k={`${e.metric} — ${e.note}`} v={e.value} />)}</Card>
+        <Card title="Result">
+          <div className="text-xs uppercase font-mono tracking-wider text-muted font-bold mb-1">Detected Scheme</div>
+          <div className="font-mono text-3xl font-bold text-accent glow-accent mb-4">{m.detected}</div>
+          <div className="pt-3 border-t border-line/40 space-y-1.5">
+            <div className="flex justify-between items-center text-xs uppercase font-semibold text-sub tracking-wider">
+              <span>Confidence Score</span>
+              <span className="font-mono text-main font-bold text-sm">{confPct.toFixed(1)}%</span>
+            </div>
+            <div className="h-3 bg-raised border border-line rounded-xs overflow-hidden p-0.5">
+              <div
+                className="h-full bg-accent glow-accent transition-all duration-500 rounded-xs"
+                style={{ width: `${confPct}%` }}
+              />
+            </div>
+          </div>
+        </Card>
+        <Card title="CNN evidence">
+          <ul className="text-sm space-y-1.5 list-disc pl-4 text-sub font-medium">
+            {m.cnnEvidence.map((e) => (
+              <li key={e}>{e}</li>
+            ))}
+          </ul>
+        </Card>
+        <Card title="DSP evidence" className="lg:col-span-2">
+          {m.dspEvidence.map((e) => (
+            <Row key={e.metric} k={`${e.metric} — ${e.note}`} v={e.value} />
+          ))}
+        </Card>
       </div>
     </Page>
   );

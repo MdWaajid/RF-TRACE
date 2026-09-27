@@ -135,31 +135,36 @@ class ModulationClassifier:
         }
 
     def _classify_dsp_features(self, iq_samples: np.ndarray) -> np.ndarray:
-        """Dynamic DSP feature classifier based on signal statistics."""
+        """Robust DSP feature classifier based on signal statistics."""
         amp = np.abs(iq_samples)
         if len(amp) == 0:
             return np.array([0.2, 0.2, 0.2, 0.2, 0.2], dtype=np.float32)
 
-        mean_amp = np.mean(amp) + 1e-12
-        var_amp = np.var(amp / mean_amp)
-        papr = np.max(amp**2) / (np.mean(amp**2) + 1e-12)
+        max_abs = np.max(amp)
+        iq_norm = iq_samples / max_abs if max_abs > 1e-12 else iq_samples
 
-        phase = np.angle(iq_samples)
-        dphase = np.diff(phase)
-        dphase = (dphase + np.pi) % (2 * np.pi) - np.pi
-        var_dphase = np.var(dphase)
+        i_pwr = float(np.mean(np.real(iq_norm) ** 2))
+        q_pwr = float(np.mean(np.imag(iq_norm) ** 2))
+        max_pwr = max(i_pwr, q_pwr)
+        min_pwr = min(i_pwr, q_pwr)
+        iq_ratio = float(min_pwr / (max_pwr + 1e-12))
+        var_amp = float(np.var(np.abs(iq_norm)))
 
-        # FSK features: high phase derivative variance, constant amplitude (low amp variance)
-        fsk_score = max(0.01, min(0.95, var_dphase * 2.5 - var_amp * 0.5))
-        
-        # PSK features: constant amplitude (low var_amp), discrete phase transitions
-        qpsk_score = max(0.01, min(0.95, 1.0 - var_amp * 2.0 - abs(papr - 1.5) * 0.2))
-        bpsk_score = max(0.01, min(0.95, 0.5 * qpsk_score))
-        psk8_score = max(0.01, min(0.95, 0.3 * qpsk_score))
-        
-        # QAM features: higher amplitude variance (multilevel constellation)
-        qam16_score = max(0.01, min(0.95, var_amp * 3.0 + (papr - 2.0) * 0.1))
+        inst_freq = np.angle(iq_norm[1:] * np.conj(iq_norm[:-1]))
+        max_abs_freq = float(np.max(np.abs(inst_freq))) if len(inst_freq) > 0 else 0.0
 
-        scores = np.array([bpsk_score, qpsk_score, psk8_score, fsk_score, qam16_score], dtype=np.float32)
-        exp_scores = np.exp(scores - np.max(scores))
-        return exp_scores / np.sum(exp_scores)
+        # Class scores: MODULATION_CLASSES = ["BPSK", "QPSK", "8PSK", "FSK", "16QAM"]
+        if max_abs_freq < 2.0 and var_amp < 0.10:
+            # Constant phase derivative without 180-degree jumps -> FSK
+            scores = np.array([0.05, 0.05, 0.05, 0.90, 0.05], dtype=np.float32)
+        elif iq_ratio < 0.15:
+            # Single channel energy (1D constellation) -> BPSK
+            scores = np.array([0.92, 0.05, 0.01, 0.01, 0.01], dtype=np.float32)
+        elif var_amp > 0.15:
+            # Multilevel amplitude variance -> 16QAM
+            scores = np.array([0.05, 0.10, 0.05, 0.05, 0.75], dtype=np.float32)
+        else:
+            # Balanced 2D quadrature -> QPSK / 8PSK
+            scores = np.array([0.05, 0.85, 0.05, 0.03, 0.02], dtype=np.float32)
+
+        return scores

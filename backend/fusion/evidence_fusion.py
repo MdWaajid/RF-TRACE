@@ -32,9 +32,13 @@ def fuse_evidence(
 
         # Instantaneous frequency discriminator for FSK detection
         inst_freq = np.angle(iq_norm[1:] * np.conj(iq_norm[:-1]))
-        h, _ = np.histogram(inst_freq, bins=20)
-        top2_sum = float(np.sum(sorted(h)[-2:]))
-        bimodal_ratio = top2_sum / float(len(inst_freq))
+        h, bin_edges = np.histogram(inst_freq, bins=20)
+        # Find distinct peaks in frequency derivative distribution
+        h_max = np.max(h) if len(h) > 0 else 1
+        peaks = [i for i in range(1, len(h)-1) if h[i] > h[i-1] and h[i] > h[i+1] and h[i] > 0.15 * h_max]
+        # True FSK has 2 distinct peak frequencies separated by at least 2 bins
+        is_fsk_spectrum = (len(peaks) >= 2 and abs(peaks[0] - peaks[-1]) >= 3)
+        fsk_cnn_prob = raw_probs.get("FSK", 0.0)
 
         dsp_evidence.append(
             {
@@ -52,56 +56,42 @@ def fuse_evidence(
         )
         dsp_evidence.append(
             {
-                "metric": "Instantaneous Frequency Bimodal Ratio",
-                "value": f"{bimodal_ratio:.3f}",
-                "note": "Ratio > 0.80 indicates two frequency shift tones (FSK)",
+                "metric": "Instantaneous Frequency Peaks",
+                "value": f"{len(peaks)} peaks",
+                "note": "Multi-peak frequency distribution indicates frequency shift tones (FSK)",
             }
         )
 
-        # Rule 1: FSK Dual-Tone Frequency Shift (Bimodal Instantaneous Frequency)
-        if (bimodal_ratio > 0.65 or raw_probs.get("FSK", 0) > 0.5) and env_var < 0.10:
+        # Fusion Decision Matrix
+        # Rule 1: FSK Dual-Tone Frequency Shift
+        if (is_fsk_spectrum or fsk_cnn_prob > 0.6) and env_var < 0.10:
             detected = "FSK"
-            base_confidence = 0.995
+            base_confidence = max(base_confidence, 0.95)
+            raw_probs["FSK"] = max(raw_probs.get("FSK", 0.0), 0.95)
             cnn_evidence.append(
-                f"Evidence Fusion: DSP measured sharp dual-tone frequency shifts (FSK bimodal ratio = {bimodal_ratio:.3f}), confirming FSK modulation."
+                f"Evidence Fusion: Measured dual-tone frequency shifts (FSK peaks = {len(peaks)}), confirming FSK modulation."
             )
-            raw_probs = {
-                "BPSK": 0.001,
-                "QPSK": 0.001,
-                "8PSK": 0.001,
-                "FSK": 0.995,
-                "16QAM": 0.002,
-            }
 
-        # Rule 2: Single-channel BPSK signal (Q power = 0)
-        elif iq_ratio < 0.05:
+        # Rule 2: Single-channel 1D BPSK signal (Q power negligible or BPSK dominant)
+        elif iq_ratio < 0.15 or (raw_probs.get("BPSK", 0.0) > 0.4 and iq_ratio < 0.35):
             detected = "BPSK"
-            base_confidence = 0.996
+            base_confidence = max(base_confidence, 0.95)
+            raw_probs["BPSK"] = max(raw_probs.get("BPSK", 0.0), 0.95)
             cnn_evidence.append(
-                "Evidence Fusion: DSP measured zero Quadrature Q energy (I/Q Ratio = 0.000), confirming BPSK modulation."
+                f"Evidence Fusion: Measured 1D phase trajectory (I/Q Ratio = {iq_ratio:.3f}), confirming BPSK modulation."
             )
-            raw_probs = {
-                "BPSK": 0.996,
-                "QPSK": 0.001,
-                "8PSK": 0.001,
-                "FSK": 0.001,
-                "16QAM": 0.001,
-            }
 
         # Rule 3: Quadrature 2D PSK signal (I & Q power balanced, low envelope variance)
-        elif iq_ratio > 0.70 and env_var < 0.05 and bimodal_ratio <= 0.65:
-            detected = "QPSK"
-            base_confidence = 0.998
+        elif iq_ratio > 0.60 and env_var < 0.05 and not is_fsk_spectrum:
+            if raw_probs.get("8PSK", 0.0) > 0.4:
+                detected = "8PSK"
+            else:
+                detected = "QPSK"
+            base_confidence = max(base_confidence, 0.92)
+            raw_probs[detected] = max(raw_probs.get(detected, 0.0), 0.92)
             cnn_evidence.append(
-                f"Evidence Fusion: DSP measured balanced 2D Quadrature energy (I/Q Ratio = {iq_ratio:.3f}) and low envelope variance ({env_var:.4f}), confirming QPSK modulation."
+                f"Evidence Fusion: Measured balanced 2D Quadrature energy (I/Q Ratio = {iq_ratio:.3f}) and low envelope variance ({env_var:.4f}), confirming {detected} modulation."
             )
-            raw_probs = {
-                "BPSK": 0.001,
-                "QPSK": 0.998,
-                "8PSK": 0.0005,
-                "FSK": 0.0003,
-                "16QAM": 0.0002,
-            }
 
     # Spectral feature check
     power_db = spectrum_data.get("powerDb", spectrum_data.get("power_db", []))

@@ -55,3 +55,19 @@ async def get_analysis_results(analysis_id: str):
         num_samples=20000,
     )
     return generate_full_analysis_report(buffer)
+
+
+@router.get("/analysis/{analysis_id}/export/latex")
+async def export_analysis_latex(analysis_id: str):
+    """Returns analysis report compiled into LaTeX (.tex) format."""
+    from fastapi.responses import Response
+    from backend.reports.exporter import generate_latex_report
+
+    results = await get_analysis_results(analysis_id)
+    latex_content = generate_latex_report(results)
+    filename = results.get("file", {}).get("name", "signal_profile").replace(".iq", "").replace(".wav", "")
+    return Response(
+        content=latex_content,
+        media_type="text/x-tex",
+        headers={"Content-Disposition": f'attachment; filename="{filename}_rf-trace_report.tex"'},
+    )

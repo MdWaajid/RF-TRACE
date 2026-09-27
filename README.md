@@ -92,6 +92,34 @@ The frontend web application will launch at: **`http://localhost:5173`**
 
 ---
 
+## Deploying the Backend to Render
+
+Push the backend changes to the GitHub branch connected to your Render service:
+
+```bash
+git add backend/fusion/evidence_fusion.py backend/main.py backend/requirements.txt
+git commit -m "Fix PyTorch CNN evidence fusion logic and Render CPU deployment"
+git push origin main
+```
+
+Configure the Render web service with these settings:
+
+| Setting | Value |
+| :--- | :--- |
+| **Build Command** | `pip install -r backend/requirements.txt` |
+| **Start Command** | `uvicorn backend.main:app --host 0.0.0.0 --port $PORT` |
+| **Python Version** | `3.10`, `3.11`, or `3.12` |
+
+For a separately deployed frontend, set `VITE_API_URL` to the backend base URL, for example `https://<your-render-backend-name>.onrender.com`, then redeploy the frontend so the build picks up the variable. The web UI's **Settings** can also be used to enter the backend URL; a URL saved there takes precedence over `VITE_API_URL` in that browser.
+
+After deployment, verify the backend at `https://<your-render-backend-name>.onrender.com/api/health`. It should return `{"status":"ok","service":"RF-TRACE-backend"}`. Run the backend tests locally with:
+
+```bash
+pytest backend/tests/
+```
+
+---
+
 ## AI Model Training & Evaluation Scripts
 
 RF-TRACE includes a built-in PyTorch training pipeline combining Kaggle RadioML 2016.10A real-world frames with oversampled synthetic signal augmentations (CFO, phase noise, dynamic RRC roll-off).
