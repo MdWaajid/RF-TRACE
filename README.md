@@ -6,6 +6,17 @@ It automatically processes raw complex I/Q recorded signals (`.iq`, `.cf32`, `.c
 
 ---
 
+
+## GrowthX × AWS Off Campus
+
+**Off Campus Application Code:** `EXJCC2`
+
+**Project:** RF-TRACE
+
+This project is being showcased as part of my GrowthX × AWS Off Campus application.
+
+---
+
 ## Architecture Overview
 
 ```
